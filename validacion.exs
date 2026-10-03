@@ -1,1 +1,61 @@
+defmodule Validacion do
+  @moduledoc """
+  Valida los lotes de producción del taller de confecciones
+  antes de utilizarlos en los cálculos del programa.
 
+  La validación se realiza mediante cinco reglas, en el orden
+  establecido por el enunciado del proyecto:
+
+  1. Verificar que el confeccionista exista.
+  2. Verificar que la línea de producción exista.
+  3. Verificar que el día sea un entero entre 1 y 6.
+  4. Verificar que la cantidad de prendas sea un entero entre 1 y 180.
+  5. Verificar que el porcentaje de defectos sea un número entre 0 y 100.
+
+  La validación devuelve una tupla {:ok, lote} cuando el lote
+  cumple todas las reglas, o {:error, motivo} cuando alguna
+  regla no se cumple.
+
+  Los lotes rechazados no participan en los cálculos posteriores
+  del programa, pero son utilizados en el reporte R1.
+  """
+
+
+defp validar_lote()do
+
+
+
+end
+
+
+
+defp validar_confeccionista(lote, confeccionistas)do
+  codigo=lote.confeccionista
+
+ case Enum.find(confeccionistas,&(&1.codigo==codigo)) do nil ->
+
+    {:error,:confeccionista_desconocido}
+  _confeccionista ->
+    {:ok,lote}
+
+  end
+end
+
+defp validar_linea() do
+
+end
+
+defp validar_dia() do
+
+
+end
+
+defp validar_prendas() do
+
+
+end
+defp validar_defectos() do
+
+end
+
+end

@@ -20,9 +20,20 @@ defmodule Validacion do
   del programa, pero son utilizados en el reporte R1.
   """
 
-
-defp validar_lote()do
-
+@doc """
+  Valida un lote aplicando las cinco reglas de validación
+  en el orden establecido.
+  """
+def validar_lote(lote, confeccionistas, lineas) do
+  with {:ok, lote} <- validar_confeccionista(lote, confeccionistas),
+       {:ok, lote} <- validar_linea(lote, lineas),
+       {:ok, lote} <- validar_dia(lote),
+       {:ok, lote} <- validar_prendas(lote),
+       {:ok, lote} <- validar_defectos(lote) do
+    {:ok, lote}
+  else
+    {:error, motivo} -> {:error, motivo}
+  end
 
 
 end

@@ -41,21 +41,44 @@ defp validar_confeccionista(lote, confeccionistas)do
   end
 end
 
-defp validar_linea() do
+defp validar_linea(lote, lineas) do
+  id=lote.linea
+  case Enum.find(lineas,&(&1.id==id)) do nil ->
+
+    {:error,:linea_desconocida}
+
+  _linea ->
+    {:ok,lote}
+
+   end
 
 end
 
-defp validar_dia() do
-
-
+defp validar_dia(lote) do
+ dia=lote.dia
+ if is_integer(dia) and dia >= 1 and dia <=6 do
+   {:ok,lote}
+ else
+   {:error,:dia_invalido}
+ end
 end
 
-defp validar_prendas() do
-
-
+defp validar_prendas(lote) do
+  prenda=lote.prendas
+  if is_integer(prenda) and prenda >= 1 and prenda <= 180 do
+    {:ok,lote}
+  else
+    {:error,:prendas_fuera_de_rango}
+  end
 end
-defp validar_defectos() do
 
+defp validar_defectos(lote) do
+  porcentaje=lote.defectos
+  if is_number(porcentaje) and porcentaje >= 0 and porcentaje <= 100 do
+    {:ok,lote}
+  else
+    {:error,:porcentaje_invalido}
+  end
 end
 
 end

@@ -2,7 +2,7 @@ defmodule Programa do
    @moduledoc """
    Cordina la ejecucion del programa del taller de confecciones.
    """
-
+   #Este fue hecho de manera temporal para poder probar el reporte 1, se puede eliminar cuando se haga la integracion con el resto del programa.
    def main() do
      confeccionistas=Datos.confeccionistas()
       lineas=Datos.lineas()
@@ -21,4 +21,3 @@ defmodule Programa do
     end
 
 end
-

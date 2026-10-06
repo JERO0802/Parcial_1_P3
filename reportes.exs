@@ -1,14 +1,13 @@
 defmodule Reportes do
 
   @moduledoc """
-  Genera los reportes del taller de confecciones
+  Genera los reportes del taller de confecciones.
   """
 
   @doc """
-  Genera el reporte R1, que contiene los lotes rechazados
-   los motivos de rechazo,y la cantidad de rechazos por motivo.
+  Genera el reporte R1, que contiene los lotes rechazados,
+  los motivos de rechazo y la cantidad de rechazos por motivo.
   """
-
   def reporte_1(resultados) do
     Enum.reduce(resultados, %{rechazados: [], cantidades: %{}}, fn {lote, resultado}, acumulador ->
       case resultado do
@@ -18,8 +17,10 @@ defmodule Reportes do
         {:error, motivo} ->
           rechazados = [{lote, motivo} | acumulador.rechazados]
 
-          cantidades = Map.update(acumulador.cantidades, motivo, 1, &(&1 + 1))
-           %{
+          cantidades =
+            Map.update(acumulador.cantidades, motivo, 1, &(&1 + 1))
+
+          %{
             rechazados: rechazados,
             cantidades: cantidades
           }
@@ -70,7 +71,7 @@ defmodule Reportes do
   También indica si la meta se alcanzó todos los días y si se
   alcanzó al menos un día.
   """
- def reporte_3(lotes_validos) do
+  def reporte_3(lotes_validos) do
     produccion_diaria =
       Enum.map(1..6, fn dia ->
         prendas = prendas_por_dia(lotes_validos, dia)
@@ -91,7 +92,6 @@ defmodule Reportes do
     }
   end
 
-
   defp prendas_por_dia(lotes_validos, dia) do
     lotes_validos
     |> Enum.filter(fn lote -> lote.dia == dia end)
@@ -99,7 +99,116 @@ defmodule Reportes do
     |> Enum.sum()
   end
 
-   @doc """
+  @doc """
+  Genera el reporte R4.
+
+  Lista todos los confeccionistas ordenados de mayor a menor
+  según el pago neto.
+  """
+  def reporte_4(liquidaciones) do
+    liquidaciones
+    |> Enum.sort_by(& &1.neto, :desc)
+    |> Enum.with_index(1)
+    |> Enum.map(fn {liquidacion, posicion} ->
+      Map.put(liquidacion, :posicion, posicion)
+    end)
+  end
+
+  @doc """
+  Genera el reporte R5.
+
+  Obtiene el confeccionista que produjo más prendas cada día.
+  Si existe empate, aparecen todos.
+  """
+  def reporte_5(lotes_validos, confeccionistas) do
+    resultados =
+      Enum.map(1..6, fn dia ->
+        lotes_dia =
+          Enum.filter(lotes_validos, fn lote ->
+            lote.dia == dia
+          end)
+
+        if Enum.empty?(lotes_dia) do
+          %{
+            dia: dia,
+            ganadores: [],
+            prendas: 0
+          }
+        else
+          produccion =
+            Enum.reduce(lotes_dia, %{}, fn lote, acc ->
+              Map.update(
+                acc,
+                lote.confeccionista,
+                lote.prendas,
+                &(&1 + lote.prendas)
+              )
+            end)
+
+          maximo =
+            produccion
+            |> Map.values()
+            |> Enum.max()
+
+          ganadores =
+            produccion
+            |> Enum.filter(fn {_codigo, prendas} ->
+              prendas == maximo
+            end)
+            |> Enum.map(fn {codigo, prendas} ->
+              confeccionista =
+                Enum.find(confeccionistas, fn c ->
+                  c.codigo == codigo
+                end)
+
+              %{
+                codigo: codigo,
+                nombre: confeccionista.nombre,
+                prendas: prendas
+              }
+            end)
+
+          %{
+            dia: dia,
+            ganadores: ganadores,
+            prendas: maximo
+          }
+        end
+      end)
+
+    conteo_primeros =
+      Enum.reduce(resultados, %{}, fn resultado, acc ->
+        Enum.reduce(resultado.ganadores, acc, fn ganador, acumulado ->
+          Map.update(
+            acumulado,
+            ganador.codigo,
+            1,
+            &(&1 + 1)
+          )
+        end)
+      end)
+
+    lideres =
+      if map_size(conteo_primeros) == 0 do
+        []
+      else
+        maximo =
+          conteo_primeros
+          |> Map.values()
+          |> Enum.max()
+
+        Enum.filter(conteo_primeros, fn {_codigo, dias} ->
+          dias == maximo
+        end)
+      end
+
+    %{
+      dias: resultados,
+      lideres: lideres
+    }
+  end
+
+  @doc """
   Genera el reporte R6 con el confeccionista que tiene el menor
   porcentaje de defectos ponderado por prendas.
 
@@ -151,6 +260,69 @@ defmodule Reportes do
           candidato.porcentaje_ponderado
         end)
     end
+  end
+
+  @doc """
+  Genera el reporte R7.
+
+  Calcula el total pagado, el total de prendas y el promedio
+  pagado por prenda.
+  """
+  def reporte_7(liquidaciones) do
+    total_pagado =
+      liquidaciones
+      |> Enum.map(& &1.neto)
+      |> Enum.sum()
+
+    total_prendas =
+      liquidaciones
+      |> Enum.map(& &1.prendas)
+      |> Enum.sum()
+
+    promedio =
+      if total_prendas > 0 do
+        total_pagado / total_prendas
+      else
+        nil
+      end
+
+    %{
+      total_pagado: total_pagado,
+      total_prendas: total_prendas,
+      promedio_por_prenda: promedio
+    }
+  end
+
+  @doc """
+  Genera el reporte R8.
+
+  Muestra los confeccionistas que tienen al menos
+  un lote válido en todas las líneas.
+  """
+  def reporte_8(lotes_validos, confeccionistas, lineas) do
+    total_lineas = Enum.count(lineas)
+
+    confeccionistas
+    |> Enum.filter(fn confeccionista ->
+      lineas_trabajadas =
+        lotes_validos
+        |> Enum.filter(fn lote ->
+          lote.confeccionista == confeccionista.codigo
+        end)
+        |> Enum.map(fn lote ->
+          lote.linea
+        end)
+        |> Enum.uniq()
+        |> Enum.count()
+
+      lineas_trabajadas == total_lineas
+    end)
+    |> Enum.map(fn confeccionista ->
+      %{
+        codigo: confeccionista.codigo,
+        nombre: confeccionista.nombre
+      }
+    end)
   end
 
 end

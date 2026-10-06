@@ -53,6 +53,7 @@ defmodule Util do
       "\nIngrese el código del confeccionista para el comprobante individual: "
     )
     |> String.trim()
+    |> String.upcase()
   end
 
   @doc """

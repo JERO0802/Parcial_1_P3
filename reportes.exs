@@ -71,25 +71,32 @@ defmodule Reportes do
   Los días sin lotes válidos aparecen con cero prendas.
   """
   def reporte_3(lotes_validos) do
-    produccion_diaria =
-      Enum.map(1..6, fn dia ->
-        prendas = prendas_por_dia(lotes_validos, dia)
+    resultado = calcular_r3(lotes_validos)
+    %{ produccion_diaria: resultado.produccion_diaria, resumen: resultado.resumen }
+  end
+   @doc """
+   Calcula los datos completos del reporte R3
+   Además de los datos que se muestran en R3, conserva un mapa de producción diaria que será utilizado en la investigación C.2
+   para combinar la producción con la de un taller aliado.
+   """
+   def calcular_r3(lotes_validos) do
+     produccion_diaria = Enum.map(1..6, fn dia -> prendas =
 
-        %{
-          dia: dia,
-          prendas: prendas,
-          meta_alcanzada: prendas >= 600
-        }
+       prendas_por_dia(lotes_validos, dia)
+       %{ dia: dia, prendas: prendas, meta_alcanzada: prendas >= 600 }
       end)
 
-    %{
-      produccion_diaria: produccion_diaria,
-      resumen: %{
-        todos_los_dias: Enum.all?(produccion_diaria, & &1.meta_alcanzada),
-        al_menos_un_dia: Enum.any?(produccion_diaria, & &1.meta_alcanzada)
-      }
-    }
-  end
+        mapa_produccion = Map.new( produccion_diaria, fn resultado ->
+           {resultado.dia, resultado.prendas}
+          end )
+
+         %{ produccion_diaria: produccion_diaria,
+          mapa_produccion: mapa_produccion,
+           resumen: %{ todos_los_dias: Enum.all?( produccion_diaria, & &1.meta_alcanzada ),
+           al_menos_un_dia: Enum.any?( produccion_diaria, & &1.meta_alcanzada ) } }
+ end
+
+
 
   defp prendas_por_dia(lotes_validos, dia) do
     lotes_validos
@@ -441,5 +448,3 @@ defmodule Reportes do
   end
 
 end
-
-
